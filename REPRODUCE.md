@@ -12,9 +12,6 @@ For the exact final-run environment, use `requirements-lock.txt`.
 
 The report PDF is compiled with XeLaTeX and BibTeX. The latest compiled file is:
 
-```text
-output/pdf/现代密码学课程报告_曾嘉祺_最终提交版.pdf
-```
 
 ## Quick Check
 
