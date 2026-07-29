@@ -1,0 +1,19 @@
+\\begin{verbatim}
+sequenceDiagram
+    participant C as Clients
+    participant A as Aggregator A
+    participant B as Aggregator B
+    participant S as FL Server
+    S->>C: Broadcast global model w_t
+    C->>C: Local training and attack simulation
+    C->>C: Sketch, quantize, additive-share
+    C->>A: Send sketch share q_i^(A)
+    C->>B: Send sketch share q_i^(B)
+    A-->>B: Secure distance protocol messages
+    A-->>S: Distance/filtering result shares
+    B-->>S: Distance/filtering result shares
+    S->>S: Select low-score clients
+    C->>S: Masked selected model updates
+    S->>S: Masks cancel; aggregate selected updates
+    S-->>C: Broadcast updated global model w_{t+1}
+\\end{verbatim}

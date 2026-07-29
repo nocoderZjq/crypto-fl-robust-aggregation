@@ -1,0 +1,22 @@
+\\begin{algorithm}[t]
+\\caption{PP-SRSF: Privacy-Preserving Sketch-based Robust Similarity Filtering}
+\\begin{algorithmic}[1]
+\\Require Global model $w_t$, clients $C$, sketch dimension $m$, malicious estimate $f$
+\\Ensure Updated model $w_{t+1}$
+\\For{each client $i \\in C$}
+  \\State Train locally and compute update $\\Delta_i$
+  \\State Generate sketch $s_i = R\\Delta_i$ with public random projection $R \\in \\mathbb{R}^{m \\times d}$
+  \\State Quantize $q_i = \\lfloor s_i \\cdot S \\rceil \\bmod p$
+  \\State Send additive shares $(q_i^{(A)}, q_i^{(B)})$ to aggregators $A$ and $B$
+\\EndFor
+\\For{each pair $(i,j)$}
+  \\State Aggregators compute a secure prototype of $D_{ij}=\\lVert q_i-q_j\\rVert_2^2$
+\\EndFor
+\\For{each client $i$}
+  \\State $score_i \\gets$ sum of the smallest $|C|-f-2$ distances from row $D_i$
+\\EndFor
+\\State $S_t \\gets$ the $|C|-f$ clients with the lowest scores
+\\State Securely aggregate $\\{\\Delta_i : i \\in S_t\\}$ with canceling masks
+\\State $w_{t+1} \\gets w_t + |S_t|^{-1}\\sum_{i\\in S_t}\\Delta_i$
+\\end{algorithmic}
+\\end{algorithm}

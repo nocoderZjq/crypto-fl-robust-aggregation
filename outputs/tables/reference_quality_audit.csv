@@ -1,0 +1,19 @@
+bib_key,year,venue,ccf_level,counts_toward_requirement
+sophon2025,2025,IEEE TDSC,B,yes
+zuo2025heterogeneity,2025,IEEE TMC,A,yes
+gu2025dpbrem,2025,USENIX Security,A,yes
+fedamm2025,2025,IEEE TIFS,A,yes
+dfl2024dual,2024,CVPR,A,yes
+fedgt2025,2025,IEEE TIFS,A,yes
+li2026verifiable,2026,IEEE TDSC,B,yes
+ren2025vpfli,2025,IEEE TSC,B,yes
+gai2025public,2025,IEEE TDSC,B,yes
+tang2026mobilecloud,2026,IEEE TMC,A,yes
+wang2025pravfed,2025,IEEE TIFS,A,yes
+tang2025roby,2025,IEEE TIFS,A,yes
+zhang2025verifiabledp,2025,IEEE TDSC,B,yes
+chen2024irregular,2024,IEEE Internet of Things Journal,not A/B,no
+zhu2026bpflh,2026,IEEE TDSC,B,yes
+hu2024compressive,2024,IEEE Internet of Things Journal,not A/B,no
+xia2024secureagg,2024,IEEE ITW,not A/B,no
+aion2025,2025,USENIX Security,A,yes

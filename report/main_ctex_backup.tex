@@ -1,0 +1,264 @@
+\documentclass[UTF8,a4paper,zihao=-4]{ctexart}
+\usepackage{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{longtable}
+
+\geometry{left=2.6cm,right=2.6cm,top=2.6cm,bottom=2.6cm}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+\title{基于秘密共享的密态异常梯度过滤与鲁棒安全聚合机制研究}
+\author{现代密码学课程报告}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+联邦学习在保护数据本地性的同时，仍然面临客户端模型更新泄露隐私和恶意客户端投毒破坏全局收敛的双重风险。传统安全聚合协议能够隐藏单个客户端更新，但无法在聚合前识别异常更新；Krum、Trimmed Mean 等鲁棒聚合方法能够抵御部分拜占庭攻击，却通常要求服务器访问明文梯度或模型更新。本文面向“抗标签翻转与拜占庭攻击的密文域鲁棒安全聚合模型”选题，提出一种课程原型级方案 PP-SRSF（Privacy-Preserving Sketch-based Robust Similarity Filtering）。该方法先将高维模型更新映射为低维随机投影草图，再对草图进行定点量化和加性秘密共享，由两个非共谋聚合方在草图域执行距离过滤，最后对筛选后的客户端更新执行简化安全聚合。实验在 MNIST 与 Fashion-MNIST 配置上评估 FedAvg、Trimmed Mean、Plain-SRSF 与 PP-SRSF 等方法，记录准确率、Macro-F1、恶意客户端检测率、误杀率、计算开销和通信开销。结果表明，PP-SRSF 在无攻击场景下接近 FedAvg，在符号翻转和高斯噪声拜占庭攻击下显著优于普通 FedAvg，并保持与明文草图过滤相近的鲁棒性。
+\end{abstract}
+
+\textbf{关键词：} 联邦学习；安全聚合；秘密共享；拜占庭鲁棒性；标签翻转攻击；多方安全计算
+
+\section{引言}
+联邦学习允许多个客户端在不直接共享原始数据的情况下协同训练模型，但客户端上传的梯度或模型更新仍可能泄露本地数据分布、成员信息和敏感特征。同时，恶意客户端可以通过标签翻转、符号翻转或高斯噪声更新破坏全局模型收敛。现有安全聚合协议以 Bonawitz 等人的 SecAgg 为代表，主要解决服务器无法看到单个明文更新的问题\cite{bonawitz2017secagg}；现有鲁棒聚合算法则以 Krum、坐标截断均值和坐标中位数为代表，主要依赖明文更新之间的距离或坐标统计\cite{blanchard2017krum}。这导致隐私保护和鲁棒过滤之间存在结构性矛盾：如果服务器看不到单个更新，就难以判断哪些更新异常；如果服务器能够执行明文异常检测，客户端更新隐私又会被削弱。
+
+近三年的研究开始关注可验证安全聚合、隐私保护鲁棒联邦学习和多数恶意客户端鲁棒性。例如 Sophon 通过双重信任机制提升拜占庭鲁棒性\cite{sophon2025}，DP-BREM 同时考虑差分隐私和拜占庭鲁棒性\cite{gu2025dpbrem}，FedAMM 关注多数恶意客户端下的鲁棒聚合\cite{fedamm2025}，可验证多轮安全联邦学习则强调 dropout、效率和聚合正确性\cite{li2026verifiable}。这些工作说明，仅讨论模型准确率已经不足以满足现代密码学课程中“AI + 密码”交叉问题的要求，必须同时分析系统模型、威胁模型、密码学原语、协议交互和实验可复现性。
+
+本文的核心思想是将完整高维模型更新的鲁棒过滤问题转化为低维草图域的相似度过滤问题。客户端使用公开随机投影矩阵将更新压缩为低维草图，对草图定点量化后进行加性秘密共享。两个非共谋聚合方只能看到各自份额，无法单独恢复客户端草图。系统在草图域计算客户端间距离并使用 Krum 风格分数剔除异常客户端，再对剩余客户端更新执行安全聚合。本文贡献如下：
+\begin{enumerate}
+  \item 提出 PP-SRSF 原型，将随机投影草图、秘密共享距离计算和安全聚合组合为一个可复现实验系统。
+  \item 实现 FedAvg、SecureAgg、Krum、Trimmed Mean、Coordinate Median、Plain-SRSF 与 PP-SRSF 等多种方法，并支持标签翻转、符号翻转和高斯噪声攻击。
+  \item 从准确率、F1、检测率、误杀率、密码计算时间和通信开销等指标进行联合评估。
+  \item 明确给出半诚实双聚合方、非共谋假设和课程原型级安全边界，避免将模拟协议夸大为完整恶意安全 MPC。
+\end{enumerate}
+
+\section{相关工作}
+\subsection{拜占庭鲁棒联邦学习}
+Krum 首次系统化地将拜占庭容错思想引入分布式梯度聚合，通过选择与多数更新距离较近的更新来降低异常梯度影响\cite{blanchard2017krum}。后续工作进一步考虑数据异构、客户端动态性和多数恶意等真实场景。Zuo 等人研究了数据异构与拜占庭攻击并存时的鲁棒联邦学习\cite{zuo2025heterogeneity}；Sophon 使用辅助数据与双重信任机制应对任意数量恶意客户端\cite{sophon2025}；FedAMM 面向多数恶意客户端场景，强调在恶意比例超过半数时仍降低攻击成功率\cite{fedamm2025}。这些方法提高了鲁棒性，但往往依赖服务器对明文更新的统计分析。
+
+\subsection{隐私保护与安全聚合}
+安全聚合协议的目标是使服务器只能获得客户端更新总和，而无法恢复单个客户端更新\cite{bonawitz2017secagg}。近年研究进一步加入可验证性、dropout resilience 和轻量化设计，例如 Verifiable and Lightweight Multi-Round Secure Federated Learning\cite{li2026verifiable}、VPFLI\cite{ren2025vpfli} 以及公开验证的鲁棒 MPC 方案\cite{gai2025public}。这些工作与本文关注点互补：它们强调聚合正确性和隐私传输，而本文强调在安全聚合前加入隐私保护的异常过滤。
+
+\subsection{隐私与鲁棒性的联合优化}
+DP-BREM 尝试同时实现差分隐私与拜占庭鲁棒性，通过客户端动量暴露跨轮累积的恶意扰动\cite{gu2025dpbrem}。Byzantine-Resilient Secure Aggregation for FL Without Privacy Compromises 则直接关注安全聚合与拜占庭鲁棒之间的矛盾\cite{xia2024secureagg}。本文借鉴这一问题意识，但采用更轻量的随机投影草图作为过滤对象，避免在完整高维更新上执行昂贵的密态几何计算。
+
+\section{系统模型与威胁模型}
+\subsection{系统模型}
+系统包含 $n$ 个客户端、一个联邦学习协调服务器和两个非共谋聚合方 $Agg_A,Agg_B$。第 $t$ 轮中，服务器广播全局模型 $w_t$，客户端 $i$ 在本地数据 $D_i$ 上训练得到更新 $\Delta_i$。客户端将 $\Delta_i$ 展平为向量 $x_i\in\mathbb{R}^{d}$，使用公开随机矩阵 $R\in\mathbb{R}^{m\times d}$ 生成草图
+\[
+s_i = R x_i,\quad m \ll d.
+\]
+之后客户端将 $s_i$ 定点量化为 $q_i=\lfloor S s_i\rceil\bmod p$，并生成加性秘密共享
+\[
+q_i^{(A)} + q_i^{(B)} \equiv q_i \pmod p.
+\]
+$Agg_A$ 和 $Agg_B$ 分别接收一份份额，并协同计算草图域距离或距离相关统计。服务器根据距离矩阵筛选客户端，再对筛选后的更新执行安全聚合。
+
+\subsection{威胁模型}
+本文采用课程实验级半诚实模型。聚合方遵循协议，但可能试图从收到的份额推断客户端草图；$Agg_A$ 与 $Agg_B$ 不共谋。客户端中存在比例为 $\rho$ 的恶意客户端，它们可以执行标签翻转、符号翻转或高斯噪声更新。服务器被视为诚实执行协调逻辑，但不应在过滤阶段获得完整明文更新。
+
+需要强调的是，当前实现不是完整恶意安全 MPC。它不防止聚合方主动偏离协议、不处理复杂 dropout 恢复，也没有实现完全密文域几何中位数。本文将其定位为现代密码学课程原型，用于验证“秘密共享草图过滤 + 安全聚合”的系统可行性。
+
+\section{PP-SRSF 方法设计}
+\subsection{随机投影草图}
+直接在高维模型更新上执行密态距离计算的成本为 $O(nd)$ 或 $O(n^2d)$。PP-SRSF 使用随机投影将更新降维到 $m$ 维，草图维度 $m$ 通常远小于模型参数维度 $d$。随机投影保留了异常更新与正常更新之间的相似性结构，同时显著降低后续秘密共享距离计算的输入规模。
+
+\subsection{定点量化与加性秘密共享}
+秘密共享通常在整数环或有限域上工作，因此需要将浮点草图转换为整数：
+\[
+q_{i,k}=\lfloor S\cdot s_{i,k}\rceil\bmod p.
+\]
+对每个坐标生成随机份额 $r_{i,k}$，令
+\[
+q_{i,k}^{(A)}=r_{i,k},\quad q_{i,k}^{(B)}=q_{i,k}-r_{i,k}\bmod p.
+\]
+单个聚合方仅持有随机份额，无法独立恢复 $q_i$。
+
+\subsection{草图域鲁棒过滤}
+系统计算客户端间的平方欧氏距离
+\[
+D_{ij}=\|q_i-q_j\|_2^2.
+\]
+对每个客户端 $i$，使用 Krum 风格分数：
+\[
+score_i=\sum_{j\in N_i}D_{ij},
+\]
+其中 $N_i$ 是距离 $i$ 最近的 $n-f-2$ 个客户端集合，$f=\lfloor \rho n \rfloor$。系统保留分数最低的 $n-f$ 个客户端。
+
+\subsection{安全聚合}
+筛选后客户端使用简化安全聚合。每个客户端上传带掩码的更新 $\widetilde{\Delta_i}=\Delta_i+M_i$，所有被选客户端的掩码满足 $\sum_i M_i=0$。服务器只能获得
+\[
+\sum_i \widetilde{\Delta_i}=\sum_i \Delta_i,
+\]
+进而更新全局模型。
+
+\begin{algorithm}[t]
+\caption{PP-SRSF 鲁棒安全聚合流程}
+\begin{algorithmic}[1]
+\Require 客户端集合 $C$，全局模型 $w_t$，草图维度 $m$，恶意客户端估计 $f$
+\Ensure 新全局模型 $w_{t+1}$
+\For{每个客户端 $i\in C$}
+  \State 本地训练并得到模型更新 $\Delta_i$
+  \State 计算草图 $s_i=R\Delta_i$
+  \State 定点量化 $q_i=\lfloor S s_i\rceil\bmod p$
+  \State 生成秘密共享 $(q_i^{(A)},q_i^{(B)})$
+\EndFor
+\State 聚合方基于份额计算草图距离矩阵 $D$
+\For{每个客户端 $i$}
+  \State $score_i\gets$ 到最近 $n-f-2$ 个客户端距离之和
+\EndFor
+\State 选择分数最低的 $n-f$ 个客户端集合 $S_t$
+\State 对 $\{\Delta_i:i\in S_t\}$ 执行安全聚合
+\State $w_{t+1}\gets w_t + |S_t|^{-1}\sum_{i\in S_t}\Delta_i$
+\end{algorithmic}
+\end{algorithm}
+
+\section{安全性与复杂度分析}
+\subsection{隐私性分析}
+在非共谋假设下，单个聚合方只看到 $q_i$ 的随机份额。由于 $q_i^{(A)}$ 在 $\mathbb{Z}_p$ 上随机选择，单个份额与真实草图统计独立，因此无法恢复客户端草图。服务器在过滤阶段只使用距离矩阵或过滤结果，不访问完整明文更新。安全聚合阶段，成对掩码抵消后服务器只能看到选中客户端更新之和。
+
+\textbf{命题 1（单方草图隐私）.} 设 $q_i\in\mathbb{Z}_p^m$ 为客户端 $i$ 的量化草图，客户端随机采样 $r_i\leftarrow\mathbb{Z}_p^m$，并令 $q_i^{(A)}=r_i$、$q_i^{(B)}=q_i-r_i\bmod p$。若 $Agg_A$ 与 $Agg_B$ 不共谋，则任一单独聚合方看到的份额与 $q_i$ 统计独立。
+
+\textbf{证明思路.} 对任意固定草图 $q_i$ 和任意份额取值 $a\in\mathbb{Z}_p^m$，有
+\[
+\Pr[q_i^{(A)}=a\mid q_i]=p^{-m}.
+\]
+该概率与 $q_i$ 的取值无关，因此 $q_i^{(A)}$ 不泄露关于 $q_i$ 的信息；$q_i^{(B)}$ 同理。只有两个份额相加时才能重构草图。
+
+\textbf{命题 2（安全聚合求和正确性）.} 若被选客户端集合为 $S_t$，且每个客户端上传 $\widetilde{\Delta_i}=\Delta_i+M_i$，其中 $\sum_{i\in S_t}M_i=0$，则服务器聚合结果等于明文更新和。
+
+\textbf{证明思路.}
+\[
+\sum_{i\in S_t}\widetilde{\Delta_i}
+=\sum_{i\in S_t}(\Delta_i+M_i)
+=\sum_{i\in S_t}\Delta_i+\sum_{i\in S_t}M_i
+=\sum_{i\in S_t}\Delta_i.
+\]
+因此掩码不会改变聚合正确性。
+
+\subsection{泄露边界}
+PP-SRSF 仍会泄露草图域距离矩阵或过滤决策，这属于鲁棒过滤必须使用的统计信息。报告中不能声称“零泄露”，而应表述为：相较于明文鲁棒聚合，PP-SRSF 避免服务器直接访问完整高维更新；相较于普通安全聚合，PP-SRSF 增加了异常过滤能力。
+
+\subsection{复杂度}
+设客户端数为 $n$，模型维度为 $d$，草图维度为 $m$。明文高维距离过滤复杂度约为 $O(n^2d)$；草图过滤将距离计算降为 $O(n^2m)$，但增加 $O(ndm)$ 的随机投影成本。由于随机投影可在客户端本地执行，服务器端或聚合方主要承担 $O(n^2m)$ 的距离统计成本。通信方面，PP-SRSF 相比普通模型更新额外增加 $2nm$ 个秘密共享草图元素。
+
+\begin{table}[h]
+\centering
+\caption{不同聚合策略的计算与通信复杂度对比}
+\label{tab:complexity}
+\begin{tabular}{lccc}
+\toprule
+方法 & 过滤计算复杂度 & 额外通信 & 隐私特征\\
+\midrule
+FedAvg & $O(nd)$ & 无 & 服务器可见明文更新\\
+SecureAgg & $O(nd)$ & 掩码协商消息 & 仅保护聚合，不过滤异常\\
+Krum & $O(n^2d)$ & 无 & 需要明文距离\\
+Plain-SRSF & $O(ndm+n^2m)$ & $nm$ 个草图元素 & 明文草图过滤\\
+PP-SRSF & $O(ndm+n^2m)$ & $2nm$ 个草图份额 & 单方不可见草图\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{实验设计}
+\subsection{数据集与模型}
+实验支持 MNIST、Fashion-MNIST 和 CIFAR-10。当前主结果包括 MNIST+MLP pilot，强化实验增加 MNIST+TinyCNN 与 Fashion-MNIST+TinyCNN 配置。数据划分采用 Dirichlet Non-IID，默认 $\alpha=0.5$。
+
+\subsection{攻击与方法}
+攻击包括：
+\begin{itemize}
+  \item 标签翻转：$y\mapsto 9-y$；
+  \item 符号翻转：$\Delta_i\mapsto -5\Delta_i$；
+  \item 高斯噪声：$\Delta_i\sim \mathcal{N}(0,\sigma^2)$。
+\end{itemize}
+对比方法包括 FedAvg、SecureAgg、Krum、Trimmed Mean、Coordinate Median、Plain-SRSF 和 PP-SRSF。
+
+\subsection{评价指标}
+每轮记录 Accuracy、Loss、Macro-F1、检测恶意客户端数、误杀数、TPR、FPR、密码计算时间、聚合时间、通信字节数和总轮次时间。
+
+\section{实验结果}
+\subsection{MNIST Pilot 结果}
+MNIST+MLP pilot 使用 10 个客户端、10 轮训练、5000 个训练样本和 1000 个测试样本。表\ref{tab:mnist-pilot} 给出最终准确率。
+
+\begin{table}[h]
+\centering
+\caption{MNIST pilot 最终准确率}
+\label{tab:mnist-pilot}
+\begin{tabular}{llccccc}
+\toprule
+攻击 & 恶意比例 & FedAvg & Krum & Trimmed Mean & Plain-SRSF & PP-SRSF\\
+\midrule
+无攻击 & 0.0 & 0.805 & 0.805 & 0.763 & 0.805 & 0.805\\
+Label Flip & 0.2 & 0.602 & 0.645 & 0.588 & 0.639 & 0.639\\
+Sign Flip & 0.2 & 0.124 & 0.707 & 0.505 & 0.707 & 0.707\\
+Gaussian Noise & 0.2 & 0.343 & 0.707 & 0.675 & 0.707 & 0.707\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+结果显示，无攻击时 PP-SRSF 与 FedAvg 收敛表现接近；在符号翻转和高斯噪声攻击下，FedAvg 准确率明显下降，而 PP-SRSF 能维持约 0.707 的准确率，与 Plain-SRSF 接近。标签翻转更隐蔽，PP-SRSF 的提升较温和，这说明仅依赖单轮草图距离不足以完全识别隐蔽数据投毒。
+
+\subsection{TinyCNN 强化实验}
+为避免实验只停留在 MLP pilot，本文进一步加入 MNIST+TinyCNN 和 Fashion-MNIST+TinyCNN 的轻量强化实验。MNIST+TinyCNN 覆盖恶意比例 $0.0,0.1,0.2,0.3$，Fashion-MNIST+TinyCNN 覆盖 $0.0,0.2$。受 CPU 时间限制，强化实验轮数设置为 6，因此其主要作用是验证更复杂模型和第二数据集链路，而不是作为最终收敛上限。
+
+\begin{table}[h]
+\centering
+\caption{MNIST+TinyCNN 强化实验最终准确率节选}
+\label{tab:tinycnn-strength}
+\begin{tabular}{llcccc}
+\toprule
+攻击 & 恶意比例 & FedAvg & Trimmed Mean & Plain-SRSF & PP-SRSF\\
+\midrule
+Gaussian Noise & 0.1 & 0.180 & 0.416 & 0.425 & 0.425\\
+Gaussian Noise & 0.2 & 0.076 & 0.370 & 0.332 & 0.332\\
+Gaussian Noise & 0.3 & 0.130 & 0.269 & 0.365 & 0.365\\
+Sign Flip & 0.1 & 0.141 & 0.260 & 0.425 & 0.425\\
+Sign Flip & 0.2 & 0.106 & 0.179 & 0.332 & 0.332\\
+Sign Flip & 0.3 & 0.104 & 0.186 & 0.365 & 0.365\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+结果进一步说明，草图过滤对于符号翻转和高斯噪声这类显著偏离正常更新簇的攻击较有效。PP-SRSF 与 Plain-SRSF 表现一致，表明秘密共享和定点量化没有改变过滤决策的主要趋势。Fashion-MNIST+TinyCNN 中，PP-SRSF 在 sign flip 和 gaussian noise 下也明显优于 FedAvg，但 label flip 仍较困难，这与标签翻转攻击更接近正常训练动态的特点一致。
+
+\subsection{20 轮 TinyCNN 聚焦实验}
+为获得更稳定的收敛趋势，本文进一步运行 MNIST+TinyCNN 的 20 轮聚焦实验，比较 FedAvg、Plain-SRSF 与 PP-SRSF。实验仍采用 10 个客户端、Dirichlet $\alpha=0.5$、5000 个训练样本和 1000 个测试样本。
+
+\begin{table}[h]
+\centering
+\caption{MNIST+TinyCNN 20 轮聚焦实验最终准确率}
+\label{tab:tinycnn-long}
+\begin{tabular}{llccc}
+\toprule
+攻击 & 恶意比例 & FedAvg & Plain-SRSF & PP-SRSF\\
+\midrule
+无攻击 & 0.0 & 0.704 & 0.705 & 0.705\\
+Label Flip & 0.2 & 0.535 & 0.279 & 0.279\\
+Sign Flip & 0.2 & 0.081 & 0.716 & 0.714\\
+Gaussian Noise & 0.2 & 0.078 & 0.716 & 0.714\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+该结果强化了两个观察。第一，在无攻击场景中，PP-SRSF 与 FedAvg 几乎一致，说明草图过滤与安全聚合原型不会引入明显收敛损失。第二，在符号翻转和高斯噪声攻击下，FedAvg 由于直接平均恶意更新而几乎失效，PP-SRSF 则通过草图距离过滤恢复到接近无攻击的准确率。第三，标签翻转攻击并不总是表现为明显的梯度离群点，特别是在强 Non-IID 和较少轮数下，单轮距离过滤可能误杀正常客户端或保留投毒客户端，因此本文不声称 PP-SRSF 已完全解决隐蔽标签投毒。
+
+\section{局限性与改进方向}
+当前实现仍是课程原型，主要局限包括：
+\begin{enumerate}
+  \item 密态距离计算采用可运行模拟原型，尚未实现完整恶意安全 Beaver triple 协议。
+  \item 安全聚合是简化掩码抵消机制，未处理真实移动 FL 中的 dropout。
+  \item 几何中位数仍未完全在密文域实现，抗多数恶意能力主要通过报告讨论和相关工作比较体现。
+  \item 当前主实验规模仍小于工业级 FL，需要进一步扩展 Fashion-MNIST、CIFAR-10 和更多随机种子。
+\item 标签翻转攻击的检测效果依赖攻击强度、数据异构程度和训练阶段。未来可引入跨轮动量、损失趋势或可信验证集信号，与草图距离共同构成复合异常分数。
+\end{enumerate}
+
+\section{结论}
+本文提出 PP-SRSF，将随机投影草图、秘密共享距离过滤和安全聚合结合起来，在隐私保护与鲁棒聚合之间提供了可运行折中。实验表明，该方法在无攻击场景下不明显损害模型性能，在强拜占庭更新攻击下显著优于普通 FedAvg，并保持接近明文草图过滤的效果。未来工作将重点完善恶意安全 MPC、dropout-resilient SecAgg、密文几何中位数和更大规模实验。
+
+\bibliographystyle{plain}
+\bibliography{references}
+\end{document}

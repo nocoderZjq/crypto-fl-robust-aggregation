@@ -1,0 +1,4 @@
+method,crypto_time_ms,aggregation_time_ms,communication_bytes
+fedavg,0.0,0.316028333333466,4234640.0
+plain_srsf,0.0,0.45200500000047344,4235920.0
+pp_srsf,12.786740833333235,4.1246716666657095,4239760.0

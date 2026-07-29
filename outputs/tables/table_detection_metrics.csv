@@ -1,0 +1,4 @@
+method,true_positive_rate,false_positive_rate
+fedavg,0.0,0.0
+plain_srsf,0.4166666666666667,0.020833333333333332
+pp_srsf,0.4166666666666667,0.020833333333333332

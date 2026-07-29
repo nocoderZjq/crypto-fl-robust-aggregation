@@ -1,0 +1,148 @@
+\begin{thebibliography}{10}
+
+\bibitem{blanchard2017krum}
+Peva Blanchard, El~Mahdi El~Mhamdi, Rachid Guerraoui, and Julien Stainer.
+\newblock Machine learning with adversaries: Byzantine tolerant gradient
+  descent.
+\newblock In {\em Advances in Neural Information Processing Systems}, 2017.
+
+\bibitem{bonawitz2017secagg}
+Keith Bonawitz, Vladimir Ivanov, Ben Kreuter, Antonio Marcedone, H.~Brendan
+  McMahan, Sarvar Patel, Daniel Ramage, Aaron Segal, and Karn Seth.
+\newblock Practical secure aggregation for privacy-preserving machine learning.
+\newblock In {\em Proceedings of the ACM SIGSAC Conference on Computer and
+  Communications Security}, pages 1175--1191, 2017.
+
+\bibitem{fltrust2021}
+Xiaoyu Cao, Minghong Fang, Jia Liu, and Neil~Zhenqiang Gong.
+\newblock {FLTrust}: Byzantine-robust federated learning via trust
+  bootstrapping.
+\newblock In {\em Proceedings of the Network and Distributed System Security
+  Symposium}, 2021.
+
+\bibitem{chen2024irregular}
+Yinuo Chen, Wuzheng Tan, Yijian Zhong, Yulin Kang, Anjia Yang, and Jian Weng.
+\newblock Byzantine-robust and privacy-preserving federated learning with
+  irregular participants.
+\newblock {\em IEEE Internet of Things Journal}, 11(21):35193--35205, 2024.
+
+\bibitem{fedamm2025}
+Keke Gai, Dongjue Wang, Jing Yu, Liehuang Zhu, and Weizhi Meng.
+\newblock {FedAMM}: Federated learning against majority malicious clients using
+  robust aggregation.
+\newblock {\em IEEE Transactions on Information Forensics and Security},
+  20:9950--9964, 2025.
+
+\bibitem{gai2025public}
+Keke Gai, Dongjue Wang, Jing Yu, Liehuang Zhu, and Weizhi Meng.
+\newblock A scheme of robust privacy-preserving multi-party computation via
+  public verification.
+\newblock {\em IEEE Transactions on Dependable and Secure Computing},
+  22(5):4896--4910, 2025.
+
+\bibitem{gu2025dpbrem}
+Xiaolan Gu, Ming Li, and Li~Xiong.
+\newblock {DP-BREM}: Differentially-private and byzantine-robust federated
+  learning with client momentum.
+\newblock In {\em Proceedings of the 34th USENIX Security Symposium}, pages
+  3065--3082. USENIX Association, 2025.
+
+\bibitem{sophon2025}
+Xiaoqiang Gui, Guo-Xian Yu, Jun Wang, Zheng Yan, Wei Wang, Carlotta Domeniconi,
+  and Lizhen Cui.
+\newblock Sophon: Byzantine-robust federated learning via dual trust mechanism.
+\newblock {\em IEEE Transactions on Dependable and Secure Computing},
+  22(6):5906--5917, 2025.
+
+\bibitem{hu2024compressive}
+G.~Hu, H.~Li, W.~Fan, and Y.~Zhang.
+\newblock Efficient byzantine-robust and privacy-preserving federated learning
+  on compressive domain.
+\newblock {\em IEEE Internet of Things Journal}, 11(4):7116--7127, 2024.
+
+\bibitem{li2026verifiable}
+Jiayin Li, Shengmin Xu, Xingshuo Han, Jianting Ning, Xinlei He, and Guowen Xu.
+\newblock Verifiable and lightweight multi-round secure federated learning.
+\newblock {\em IEEE Transactions on Dependable and Secure Computing},
+  23(1):403--416, 2026.
+
+\bibitem{aion2025}
+Yizhong Liu, Zixiao Jia, Zian Jin, Xiao Chen, Song Bian, Runhua Xu, Dawei Li,
+  Jianwei Liu, and Yuan Lu.
+\newblock {Aion}: Robust and efficient multi-round single-mask secure
+  aggregation against malicious participants.
+\newblock In {\em Proceedings of the 34th USENIX Security Symposium}, pages
+  3025--3044. USENIX Association, 2025.
+
+\bibitem{ren2025vpfli}
+Yanli Ren, Yerong Li, Guorui Feng, and Xinpeng Zhang.
+\newblock {VPFLI}: Verifiable privacy-preserving federated learning with
+  irregular users based on single server.
+\newblock {\em IEEE Transactions on Services Computing}, 18(2):1124--1136,
+  2025.
+
+\bibitem{dfl2024dual}
+Peng Sun, Xinyang Liu, Zhibo Wang, and Bo~Liu.
+\newblock Byzantine-robust decentralized federated learning via dual-domain
+  clustering and trust bootstrapping.
+\newblock In {\em Proceedings of the IEEE/CVF Conference on Computer Vision and
+  Pattern Recognition}, pages 24756--24765, 2024.
+
+\bibitem{tang2026mobilecloud}
+Wei Tang, Jiliang Li, Xiaojun Zhang, Yinbin Miao, Zhou Su, and Robert~H. Deng.
+\newblock Efficient mobile-cloud collaborative aggregation for federated
+  learning with latency resilience.
+\newblock {\em IEEE Transactions on Mobile Computing}, 25(5):7391--7407, 2026.
+
+\bibitem{tang2025roby}
+Xiangyun Tang, Minyang Li, Meng Shen, Jiawen Kang, Liehuang Zhu, Zhiquan Liu,
+  Guang Yang, Dusit Niyato, and Robert~H. Deng.
+\newblock {ROBY}: A byzantine-robust and privacy-preserving serverless
+  federated learning framework.
+\newblock {\em IEEE Transactions on Information Forensics and Security},
+  20:7824--7838, 2025.
+
+\bibitem{wang2025pravfed}
+Shuo Wang, Keke Gai, Jing Yu, Zijian Zhang, and Liehuang Zhu.
+\newblock {PraVFed}: Practical heterogeneous vertical federated learning via
+  representation learning.
+\newblock {\em IEEE Transactions on Information Forensics and Security},
+  20:2693--2705, 2025.
+
+\bibitem{fedgt2025}
+M.~Xhemrishi, J.~Ostman, A.~Wachter-Zeh, and A.~Graell~i Amat.
+\newblock {FedGT}: Identification of malicious clients in federated learning
+  with secure aggregation.
+\newblock {\em IEEE Transactions on Information Forensics and Security},
+  20:2577--2592, 2025.
+
+\bibitem{xia2024secureagg}
+Yue Xia, Christoph Hofmeister, Maximilian Egger, and Rawad Bitar.
+\newblock Byzantine-resilient secure aggregation for federated learning without
+  privacy compromises.
+\newblock In {\em 2024 IEEE Information Theory Workshop}, pages 223--228, 2024.
+
+\bibitem{zhang2025verifiabledp}
+Chushan Zhang, Jian Weng, Jiasi Weng, Yijian Zhong, Jia-Nan Liu, and Cunle
+  Deng.
+\newblock Robust and secure federated learning with verifiable differential
+  privacy.
+\newblock {\em IEEE Transactions on Dependable and Secure Computing},
+  22(5):5713--5729, 2025.
+
+\bibitem{zhu2026bpflh}
+Guofu Zhu, Wenting Shen, Zhiquan Liu, Jing Qin, and Jixin Ma.
+\newblock {BPFLH}: Byzantine-robust privacy-preserving federated learning for
+  heterogeneous data.
+\newblock {\em IEEE Transactions on Dependable and Secure Computing},
+  23(3):6103--6118, 2026.
+
+\bibitem{zuo2025heterogeneity}
+Shiyuan Zuo, Xingrun Yan, Rongfei Fan, Han Hu, Hangguan Shan, Tony Q.~S. Quek,
+  and Puning Zhao.
+\newblock Federated learning resilient to byzantine attacks and data
+  heterogeneity.
+\newblock {\em IEEE Transactions on Mobile Computing}, 24(10):10729--10742,
+  2025.
+
+\end{thebibliography}

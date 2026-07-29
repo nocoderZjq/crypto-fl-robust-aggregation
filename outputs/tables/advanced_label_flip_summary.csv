@@ -1,0 +1,6 @@
+,false_positive_rate,false_positive_rate,false_positive_rate,false_positive_rate,test_accuracy,test_accuracy,test_accuracy,test_accuracy,true_positive_rate,true_positive_rate,true_positive_rate,true_positive_rate
+method,fedavg,fedgt_proxy,pp_srsf,pp_srsf_trust,fedavg,fedgt_proxy,pp_srsf,pp_srsf_trust,fedavg,fedgt_proxy,pp_srsf,pp_srsf_trust
+attack_type,,,,,,,,,,,,
+label_flip,0.0,0.25,0.125,0.125,0.58,0.617,0.473,0.593,0.0,0.0,0.5,0.5
+label_flip_all_to_one,0.0,0.25,0.0,0.0,0.481,0.286,0.644,0.614,0.0,0.0,1.0,1.0
+label_flip_pairwise,0.0,0.25,0.125,0.25,0.584,0.599,0.316,0.272,0.0,0.0,0.5,0.0

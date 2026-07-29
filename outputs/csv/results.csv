@@ -1,0 +1,3 @@
+dataset,model,method,attack_type,malicious_ratio,non_iid_alpha,round,test_accuracy,test_loss,macro_f1,detected_malicious,false_positive,true_positive_rate,false_positive_rate,crypto_time_ms,aggregation_time_ms,communication_bytes,total_round_time_ms,seed
+fake_mnist,mlp,pp_srsf,label_flip,0.2,0.5,1,0.105,2.308035430908203,0.0394182518223524,0,1,0.0,0.25,8.491599999999266,1.826400000000561,1280,686.6289999999999,7
+fake_mnist,mlp,pp_srsf,label_flip,0.2,0.5,2,0.085,2.3342308044433593,0.01588785046728972,0,1,0.0,0.25,8.793400000000062,1.724099999998785,1280,741.1261000000006,7
