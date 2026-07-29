@@ -97,11 +97,6 @@ opens only Beaver-masked differences and final distance statistics, not input sk
 is simulated by a trusted dealer, so authenticated malicious security, dropout resilience, an encrypted
 geometric median, and formal convergence proofs remain future work.
 
-## Course Report
-
-The final Chinese course report is available at
-[`output/pdf/现代密码学课程报告_曾嘉祺_最终提交版.pdf`](output/pdf/现代密码学课程报告_曾嘉祺_最终提交版.pdf).
-
 ## Reproducibility
 
 All random operations accept a seed in the YAML configs. The smoke test is intentionally small enough for a CPU.
